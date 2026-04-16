@@ -1,5 +1,6 @@
 "use client";
-import { useState } from "react";
+import { useState, useRef } from "react";
+import html2canvas from "html2canvas";
 
 export default function Home() {
   const [idea, setIdea] = useState("");
@@ -15,6 +16,9 @@ export default function Home() {
   const [slideImages, setSlideImages] = useState<string[]>([]);
   const [imagesLoading, setImagesLoading] = useState(false);
   const [showBranding, setShowBranding] = useState(true);
+  const [downloading, setDownloading] = useState(false);
+
+  const slideRef = useRef<HTMLDivElement>(null);
 
   const gradients = [
     "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
@@ -27,7 +31,6 @@ export default function Home() {
 
   const colorNames = ["Purple", "Pink", "Blue", "Green", "Sunset", "Lavender"];
 
-  // ─── Pollinations: generate image URL for a slide ───────────────────────────
   const getPollinationsUrl = (prompt: string, seed: number) => {
     const encoded = encodeURIComponent(
       `${prompt}, educational, kids math, vibrant, cartoon style, clean background`
@@ -35,7 +38,6 @@ export default function Home() {
     return `https://image.pollinations.ai/prompt/${encoded}?width=512&height=512&seed=${seed}&nologo=true`;
   };
 
-  // ─── Generate images for all slides ─────────────────────────────────────────
   const generateImages = async (slides: any[], topic: string) => {
     setImagesLoading(true);
     const urls = slides.map((slide: any, i: number) =>
@@ -101,7 +103,6 @@ export default function Home() {
         const updated = [...editedSlides];
         updated[index] = data.slide;
         setEditedSlides(updated);
-        // Regenerate image for this slide
         const newImages = [...slideImages];
         newImages[index] = getPollinationsUrl(
           `${creative.topic} - ${data.slide.title}`,
@@ -114,19 +115,76 @@ export default function Home() {
     }
   };
 
+  // ─── DOWNLOAD CURRENT SLIDE ────────────────────────────────────────────────
+  const downloadCurrentSlide = async () => {
+    if (!slideRef.current) return;
+    setDownloading(true);
+    try {
+      const canvas = await html2canvas(slideRef.current, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: null,
+      });
+      const link = document.createElement("a");
+      link.download = `cuemath-slide-${currentSlide + 1}.png`;
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+    } catch (err) {
+      console.error("Download failed:", err);
+      alert("Download failed. Please try again.");
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  // ─── DOWNLOAD ALL SLIDES ───────────────────────────────────────────────────
+  const downloadAllSlides = async () => {
+    setDownloading(true);
+    try {
+      const originalSlide = currentSlide;
+      for (let i = 0; i < editedSlides.length; i++) {
+        setCurrentSlide(i);
+        // Wait for render
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        if (!slideRef.current) continue;
+        const canvas = await html2canvas(slideRef.current, {
+          scale: 2,
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: null,
+        });
+        const link = document.createElement("a");
+        link.download = `cuemath-slide-${i + 1}.png`;
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+        // Small delay between downloads
+        await new Promise((resolve) => setTimeout(resolve, 300));
+      }
+      setCurrentSlide(originalSlide);
+    } catch (err) {
+      console.error("Download all failed:", err);
+      alert("Download failed. Please try again.");
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   const currentGradient = gradients[colorScheme];
 
-  // ─── Slide Card with image + branding ───────────────────────────────────────
   const SlideCard = ({
     slide,
     index,
     style = {},
+    innerRef,
   }: {
     slide: any;
     index: number;
     style?: React.CSSProperties;
+    innerRef?: React.Ref<HTMLDivElement>;
   }) => (
     <div
+      ref={innerRef}
       style={{
         position: "relative",
         borderRadius: "20px",
@@ -142,11 +200,11 @@ export default function Home() {
         ...style,
       }}
     >
-      {/* AI Background Image */}
       {slideImages[index] && (
         <img
           src={slideImages[index]}
           alt="AI generated"
+          crossOrigin="anonymous"
           style={{
             position: "absolute",
             inset: 0,
@@ -161,7 +219,6 @@ export default function Home() {
         />
       )}
 
-      {/* Gradient overlay so text is readable */}
       <div
         style={{
           position: "absolute",
@@ -171,7 +228,6 @@ export default function Home() {
         }}
       />
 
-      {/* @cuemath Branding — top left */}
       {showBranding && (
         <div
           style={{
@@ -197,7 +253,6 @@ export default function Home() {
         </div>
       )}
 
-      {/* Slide number — top right */}
       <div
         style={{
           position: "absolute",
@@ -216,7 +271,6 @@ export default function Home() {
         {index + 1} / {editedSlides.length}
       </div>
 
-      {/* Content */}
       <div style={{ position: "relative", padding: "20px" }}>
         <div style={{ fontSize: "36px", marginBottom: "8px" }}>{slide.emoji}</div>
         <h3
@@ -241,7 +295,6 @@ export default function Home() {
           {slide.content}
         </p>
 
-        {/* Bottom branding bar */}
         {showBranding && (
           <div
             style={{
@@ -484,7 +537,11 @@ export default function Home() {
                       </button>
                     ))}
                   </div>
-                  <SlideCard slide={editedSlides[currentSlide]} index={currentSlide} />
+                  <SlideCard
+                    slide={editedSlides[currentSlide]}
+                    index={currentSlide}
+                    innerRef={slideRef}
+                  />
                   <div
                     style={{
                       display: "flex",
@@ -514,11 +571,99 @@ export default function Home() {
                       Next →
                     </button>
                   </div>
+
+                  {/* ══════════ DOWNLOAD BUTTONS FOR CAROUSEL ══════════ */}
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: "10px",
+                      marginTop: "16px",
+                      flexDirection: "column",
+                    }}
+                  >
+                    <button
+                      onClick={downloadCurrentSlide}
+                      disabled={downloading}
+                      style={{
+                        width: "100%",
+                        padding: "14px 20px",
+                        background: downloading
+                          ? "#444"
+                          : "linear-gradient(135deg, #667eea, #764ba2)",
+                        color: "white",
+                        border: "none",
+                        borderRadius: "12px",
+                        fontSize: "15px",
+                        fontWeight: "700",
+                        cursor: downloading ? "not-allowed" : "pointer",
+                        transition: "all 0.2s",
+                        boxShadow: "0 4px 15px rgba(102, 126, 234, 0.4)",
+                      }}
+                    >
+                      {downloading
+                        ? "⏳ Downloading..."
+                        : `⬇️ Download Slide ${currentSlide + 1}`}
+                    </button>
+                    <button
+                      onClick={downloadAllSlides}
+                      disabled={downloading}
+                      style={{
+                        width: "100%",
+                        padding: "14px 20px",
+                        background: downloading
+                          ? "#444"
+                          : "linear-gradient(135deg, #f093fb, #f5576c)",
+                        color: "white",
+                        border: "none",
+                        borderRadius: "12px",
+                        fontSize: "15px",
+                        fontWeight: "700",
+                        cursor: downloading ? "not-allowed" : "pointer",
+                        transition: "all 0.2s",
+                        boxShadow: "0 4px 15px rgba(240, 147, 251, 0.4)",
+                      }}
+                    >
+                      {downloading
+                        ? "⏳ Downloading All..."
+                        : `⬇️ Download All ${editedSlides.length} Slides`}
+                    </button>
+                  </div>
                 </>
               )}
 
               {(format === "post" || format === "story") && (
-                <SlideCard slide={editedSlides[0]} index={0} />
+                <>
+                  <SlideCard
+                    slide={editedSlides[0]}
+                    index={0}
+                    innerRef={slideRef}
+                  />
+                  {/* ══════════ DOWNLOAD BUTTON FOR POST/STORY ══════════ */}
+                  <button
+                    onClick={downloadCurrentSlide}
+                    disabled={downloading}
+                    style={{
+                      width: "100%",
+                      marginTop: "16px",
+                      padding: "14px 20px",
+                      background: downloading
+                        ? "#444"
+                        : "linear-gradient(135deg, #667eea, #764ba2)",
+                      color: "white",
+                      border: "none",
+                      borderRadius: "12px",
+                      fontSize: "15px",
+                      fontWeight: "700",
+                      cursor: downloading ? "not-allowed" : "pointer",
+                      transition: "all 0.2s",
+                      boxShadow: "0 4px 15px rgba(102, 126, 234, 0.4)",
+                    }}
+                  >
+                    {downloading
+                      ? "⏳ Downloading..."
+                      : "⬇️ Download Image"}
+                  </button>
+                </>
               )}
             </div>
 
