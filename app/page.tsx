@@ -88,7 +88,7 @@ export default function Home() {
 
   const regenerateSlide = async (index: number) => {
     try {
-      const res = await fetch("/api/regenerate", {
+      const res = await fetch("/api/generate/regenerate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -115,7 +115,6 @@ export default function Home() {
     }
   };
 
-  // ─── DOWNLOAD CURRENT SLIDE ────────────────────────────────────────────────
   const downloadCurrentSlide = async () => {
     if (!slideRef.current) return;
     setDownloading(true);
@@ -138,14 +137,12 @@ export default function Home() {
     }
   };
 
-  // ─── DOWNLOAD ALL SLIDES ───────────────────────────────────────────────────
   const downloadAllSlides = async () => {
     setDownloading(true);
     try {
       const originalSlide = currentSlide;
       for (let i = 0; i < editedSlides.length; i++) {
         setCurrentSlide(i);
-        // Wait for render
         await new Promise((resolve) => setTimeout(resolve, 500));
         if (!slideRef.current) continue;
         const canvas = await html2canvas(slideRef.current, {
@@ -158,7 +155,6 @@ export default function Home() {
         link.download = `cuemath-slide-${i + 1}.png`;
         link.href = canvas.toDataURL("image/png");
         link.click();
-        // Small delay between downloads
         await new Promise((resolve) => setTimeout(resolve, 300));
       }
       setCurrentSlide(originalSlide);
@@ -318,7 +314,6 @@ export default function Home() {
 
   return (
     <main style={{ minHeight: "100vh", padding: "40px 20px" }}>
-      {/* Header */}
       <div style={{ textAlign: "center", marginBottom: "48px" }}>
         <div
           style={{
@@ -349,7 +344,6 @@ export default function Home() {
         </p>
       </div>
 
-      {/* Input */}
       <div style={{ maxWidth: "700px", margin: "0 auto 48px" }}>
         <div className="card" style={{ padding: "32px" }}>
           <label
@@ -378,62 +372,30 @@ export default function Home() {
             }}
           >
             <div>
-              <label
-                style={{
-                  display: "block",
-                  marginBottom: "8px",
-                  color: "#ccc",
-                  fontSize: "14px",
-                }}
-              >
+              <label style={{ display: "block", marginBottom: "8px", color: "#ccc", fontSize: "14px" }}>
                 Format
               </label>
-              <select
-                value={format}
-                onChange={(e) => setFormat(e.target.value)}
-              >
+              <select value={format} onChange={(e) => setFormat(e.target.value)}>
                 <option value="carousel">📱 Instagram Carousel</option>
                 <option value="post">🖼️ Single Post (1:1)</option>
                 <option value="story">📖 Story (9:16)</option>
               </select>
             </div>
             <div>
-              <label
-                style={{
-                  display: "block",
-                  marginBottom: "8px",
-                  color: "#ccc",
-                  fontSize: "14px",
-                }}
-              >
+              <label style={{ display: "block", marginBottom: "8px", color: "#ccc", fontSize: "14px" }}>
                 Color Theme
               </label>
-              <select
-                value={colorScheme}
-                onChange={(e) => setColorScheme(Number(e.target.value))}
-              >
+              <select value={colorScheme} onChange={(e) => setColorScheme(Number(e.target.value))}>
                 {colorNames.map((name, i) => (
-                  <option key={i} value={i}>
-                    {name}
-                  </option>
+                  <option key={i} value={i}>{name}</option>
                 ))}
               </select>
             </div>
             <div>
-              <label
-                style={{
-                  display: "block",
-                  marginBottom: "8px",
-                  color: "#ccc",
-                  fontSize: "14px",
-                }}
-              >
+              <label style={{ display: "block", marginBottom: "8px", color: "#ccc", fontSize: "14px" }}>
                 Branding
               </label>
-              <select
-                value={showBranding ? "on" : "off"}
-                onChange={(e) => setShowBranding(e.target.value === "on")}
-              >
+              <select value={showBranding ? "on" : "off"} onChange={(e) => setShowBranding(e.target.value === "on")}>
                 <option value="on">✅ @cuemath ON</option>
                 <option value="off">❌ Branding OFF</option>
               </select>
@@ -442,10 +404,7 @@ export default function Home() {
               className="btn-primary"
               onClick={generate}
               disabled={loading || !idea.trim()}
-              style={{
-                opacity: loading || !idea.trim() ? 0.6 : 1,
-                marginBottom: "2px",
-              }}
+              style={{ opacity: loading || !idea.trim() ? 0.6 : 1, marginBottom: "2px" }}
             >
               {loading ? "✨ Generating..." : "✨ Generate Creative"}
             </button>
@@ -453,39 +412,19 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Error */}
       {error && (
-        <div
-          style={{
-            maxWidth: "700px",
-            margin: "0 auto 24px",
-            background: "#2a1a1a",
-            border: "1px solid #ff4444",
-            borderRadius: "8px",
-            padding: "16px",
-            color: "#ff6666",
-          }}
-        >
+        <div style={{ maxWidth: "700px", margin: "0 auto 24px", background: "#2a1a1a", border: "1px solid #ff4444", borderRadius: "8px", padding: "16px", color: "#ff6666" }}>
           ⚠️ {error}
         </div>
       )}
 
-      {/* Output */}
       {creative && editedSlides.length > 0 && (
         <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: "32px" }}>
             <h2 style={{ fontSize: "24px", fontWeight: "700" }}>
-              ✅ Your{" "}
-              {format === "carousel"
-                ? "Carousel"
-                : format === "story"
-                ? "Story"
-                : "Post"}{" "}
-              is Ready!
+              ✅ Your {format === "carousel" ? "Carousel" : format === "story" ? "Story" : "Post"} is Ready!
             </h2>
-            <p style={{ color: "#888", marginTop: "8px" }}>
-              Topic: {creative.topic}
-            </p>
+            <p style={{ color: "#888", marginTop: "8px" }}>Topic: {creative.topic}</p>
             {imagesLoading && (
               <p style={{ color: "#667eea", marginTop: "6px", fontSize: "13px" }}>
                 🖼️ AI images loading via Pollinations...
@@ -493,139 +432,64 @@ export default function Home() {
             )}
           </div>
 
-          <div
-            style={{
-              display: "flex",
-              gap: "32px",
-              flexWrap: "wrap",
-              justifyContent: "center",
-            }}
-          >
+          <div style={{ display: "flex", gap: "32px", flexWrap: "wrap", justifyContent: "center" }}>
             {/* Left - Preview */}
             <div style={{ flex: "0 0 320px" }}>
               {format === "carousel" && (
                 <>
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "center",
-                      gap: "8px",
-                      marginBottom: "16px",
-                    }}
-                  >
+                  <div style={{ display: "flex", justifyContent: "center", gap: "8px", marginBottom: "16px" }}>
                     {editedSlides.map((_: any, i: number) => (
                       <button
                         key={i}
-                        onClick={() => {
-                          setCurrentSlide(i);
-                          setEditingIndex(null);
-                        }}
+                        onClick={() => { setCurrentSlide(i); setEditingIndex(null); }}
                         style={{
-                          width: "28px",
-                          height: "28px",
-                          borderRadius: "50%",
-                          background:
-                            currentSlide === i ? "#667eea" : "#2a2a2a",
-                          border: "none",
-                          cursor: "pointer",
-                          color: "white",
-                          fontWeight: "600",
-                          fontSize: "11px",
+                          width: "28px", height: "28px", borderRadius: "50%",
+                          background: currentSlide === i ? "#667eea" : "#2a2a2a",
+                          border: "none", cursor: "pointer", color: "white",
+                          fontWeight: "600", fontSize: "11px",
                         }}
                       >
                         {i + 1}
                       </button>
                     ))}
                   </div>
-                  <SlideCard
-                    slide={editedSlides[currentSlide]}
-                    index={currentSlide}
-                    innerRef={slideRef}
-                  />
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "center",
-                      gap: "12px",
-                      marginTop: "16px",
-                    }}
-                  >
-                    <button
-                      className="btn-secondary"
-                      onClick={() =>
-                        setCurrentSlide(Math.max(0, currentSlide - 1))
-                      }
-                      disabled={currentSlide === 0}
-                    >
+                  <SlideCard slide={editedSlides[currentSlide]} index={currentSlide} innerRef={slideRef} />
+                  <div style={{ display: "flex", justifyContent: "center", gap: "12px", marginTop: "16px" }}>
+                    <button className="btn-secondary" onClick={() => setCurrentSlide(Math.max(0, currentSlide - 1))} disabled={currentSlide === 0}>
                       ← Prev
                     </button>
-                    <button
-                      className="btn-secondary"
-                      onClick={() =>
-                        setCurrentSlide(
-                          Math.min(editedSlides.length - 1, currentSlide + 1)
-                        )
-                      }
-                      disabled={currentSlide === editedSlides.length - 1}
-                    >
+                    <button className="btn-secondary" onClick={() => setCurrentSlide(Math.min(editedSlides.length - 1, currentSlide + 1))} disabled={currentSlide === editedSlides.length - 1}>
                       Next →
                     </button>
                   </div>
-
-                  {/* ══════════ DOWNLOAD BUTTONS FOR CAROUSEL ══════════ */}
-                  <div
-                    style={{
-                      display: "flex",
-                      gap: "10px",
-                      marginTop: "16px",
-                      flexDirection: "column",
-                    }}
-                  >
+                  <div style={{ display: "flex", gap: "10px", marginTop: "16px", flexDirection: "column" }}>
                     <button
                       onClick={downloadCurrentSlide}
                       disabled={downloading}
                       style={{
-                        width: "100%",
-                        padding: "14px 20px",
-                        background: downloading
-                          ? "#444"
-                          : "linear-gradient(135deg, #667eea, #764ba2)",
-                        color: "white",
-                        border: "none",
-                        borderRadius: "12px",
-                        fontSize: "15px",
-                        fontWeight: "700",
+                        width: "100%", padding: "14px 20px",
+                        background: downloading ? "#444" : "linear-gradient(135deg, #667eea, #764ba2)",
+                        color: "white", border: "none", borderRadius: "12px",
+                        fontSize: "15px", fontWeight: "700",
                         cursor: downloading ? "not-allowed" : "pointer",
-                        transition: "all 0.2s",
                         boxShadow: "0 4px 15px rgba(102, 126, 234, 0.4)",
                       }}
                     >
-                      {downloading
-                        ? "⏳ Downloading..."
-                        : `⬇️ Download Slide ${currentSlide + 1}`}
+                      {downloading ? "⏳ Downloading..." : `⬇️ Download Slide ${currentSlide + 1}`}
                     </button>
                     <button
                       onClick={downloadAllSlides}
                       disabled={downloading}
                       style={{
-                        width: "100%",
-                        padding: "14px 20px",
-                        background: downloading
-                          ? "#444"
-                          : "linear-gradient(135deg, #f093fb, #f5576c)",
-                        color: "white",
-                        border: "none",
-                        borderRadius: "12px",
-                        fontSize: "15px",
-                        fontWeight: "700",
+                        width: "100%", padding: "14px 20px",
+                        background: downloading ? "#444" : "linear-gradient(135deg, #f093fb, #f5576c)",
+                        color: "white", border: "none", borderRadius: "12px",
+                        fontSize: "15px", fontWeight: "700",
                         cursor: downloading ? "not-allowed" : "pointer",
-                        transition: "all 0.2s",
                         boxShadow: "0 4px 15px rgba(240, 147, 251, 0.4)",
                       }}
                     >
-                      {downloading
-                        ? "⏳ Downloading All..."
-                        : `⬇️ Download All ${editedSlides.length} Slides`}
+                      {downloading ? "⏳ Downloading All..." : `⬇️ Download All ${editedSlides.length} Slides`}
                     </button>
                   </div>
                 </>
@@ -633,35 +497,20 @@ export default function Home() {
 
               {(format === "post" || format === "story") && (
                 <>
-                  <SlideCard
-                    slide={editedSlides[0]}
-                    index={0}
-                    innerRef={slideRef}
-                  />
-                  {/* ══════════ DOWNLOAD BUTTON FOR POST/STORY ══════════ */}
+                  <SlideCard slide={editedSlides[0]} index={0} innerRef={slideRef} />
                   <button
                     onClick={downloadCurrentSlide}
                     disabled={downloading}
                     style={{
-                      width: "100%",
-                      marginTop: "16px",
-                      padding: "14px 20px",
-                      background: downloading
-                        ? "#444"
-                        : "linear-gradient(135deg, #667eea, #764ba2)",
-                      color: "white",
-                      border: "none",
-                      borderRadius: "12px",
-                      fontSize: "15px",
-                      fontWeight: "700",
+                      width: "100%", marginTop: "16px", padding: "14px 20px",
+                      background: downloading ? "#444" : "linear-gradient(135deg, #667eea, #764ba2)",
+                      color: "white", border: "none", borderRadius: "12px",
+                      fontSize: "15px", fontWeight: "700",
                       cursor: downloading ? "not-allowed" : "pointer",
-                      transition: "all 0.2s",
                       boxShadow: "0 4px 15px rgba(102, 126, 234, 0.4)",
                     }}
                   >
-                    {downloading
-                      ? "⏳ Downloading..."
-                      : "⬇️ Download Image"}
+                    {downloading ? "⏳ Downloading..." : "⬇️ Download Image"}
                   </button>
                 </>
               )}
@@ -669,9 +518,7 @@ export default function Home() {
 
             {/* Right - Edit Panel */}
             <div style={{ flex: "1", minWidth: "300px" }}>
-              <h3
-                style={{ fontWeight: "700", marginBottom: "16px", color: "#ccc" }}
-              >
+              <h3 style={{ fontWeight: "700", marginBottom: "16px", color: "#ccc" }}>
                 ✏️ Edit Slides
               </h3>
               {editedSlides.map((slide: any, i: number) => (
@@ -679,33 +526,17 @@ export default function Home() {
                   key={i}
                   className="card"
                   style={{
-                    padding: "16px",
-                    marginBottom: "12px",
-                    border:
-                      editingIndex === i
-                        ? "1px solid #667eea"
-                        : "1px solid #2a2a2a",
+                    padding: "16px", marginBottom: "12px",
+                    border: editingIndex === i ? "1px solid #667eea" : "1px solid #2a2a2a",
                   }}
                 >
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      marginBottom: "8px",
-                    }}
-                  >
-                    <span style={{ fontSize: "13px", color: "#888" }}>
-                      Slide {i + 1}
-                    </span>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                    <span style={{ fontSize: "13px", color: "#888" }}>Slide {i + 1}</span>
                     <div style={{ display: "flex", gap: "8px" }}>
                       <button
                         className="btn-secondary"
                         style={{ fontSize: "12px", padding: "4px 10px" }}
-                        onClick={() => {
-                          setEditingIndex(editingIndex === i ? null : i);
-                          setCurrentSlide(i);
-                        }}
+                        onClick={() => { setEditingIndex(editingIndex === i ? null : i); setCurrentSlide(i); }}
                       >
                         {editingIndex === i ? "✓ Done" : "✏️ Edit"}
                       </button>
@@ -723,61 +554,26 @@ export default function Home() {
                       <input
                         value={slide.emoji}
                         onChange={(e) => updateSlide(i, "emoji", e.target.value)}
-                        style={{
-                          background: "#111",
-                          border: "1px solid #333",
-                          borderRadius: "6px",
-                          color: "white",
-                          padding: "6px 10px",
-                          width: "60px",
-                          marginBottom: "8px",
-                          fontSize: "20px",
-                        }}
+                        style={{ background: "#111", border: "1px solid #333", borderRadius: "6px", color: "white", padding: "6px 10px", width: "60px", marginBottom: "8px", fontSize: "20px" }}
                       />
                       <input
                         value={slide.title}
-                        onChange={(e) =>
-                          updateSlide(i, "title", e.target.value)
-                        }
-                        style={{
-                          background: "#111",
-                          border: "1px solid #333",
-                          borderRadius: "6px",
-                          color: "white",
-                          padding: "8px 12px",
-                          width: "100%",
-                          marginBottom: "8px",
-                          fontSize: "14px",
-                        }}
+                        onChange={(e) => updateSlide(i, "title", e.target.value)}
+                        style={{ background: "#111", border: "1px solid #333", borderRadius: "6px", color: "white", padding: "8px 12px", width: "100%", marginBottom: "8px", fontSize: "14px" }}
                       />
                       <textarea
                         rows={3}
                         value={slide.content}
-                        onChange={(e) =>
-                          updateSlide(i, "content", e.target.value)
-                        }
+                        onChange={(e) => updateSlide(i, "content", e.target.value)}
                         style={{ fontSize: "13px" }}
                       />
                     </div>
                   ) : (
                     <div>
-                      <p
-                        style={{
-                          fontSize: "13px",
-                          fontWeight: "600",
-                          color: "#fff",
-                          marginBottom: "4px",
-                        }}
-                      >
+                      <p style={{ fontSize: "13px", fontWeight: "600", color: "#fff", marginBottom: "4px" }}>
                         {slide.emoji} {slide.title}
                       </p>
-                      <p
-                        style={{
-                          fontSize: "12px",
-                          color: "#888",
-                          lineHeight: "1.5",
-                        }}
-                      >
+                      <p style={{ fontSize: "12px", color: "#888", lineHeight: "1.5" }}>
                         {slide.content.substring(0, 80)}...
                       </p>
                     </div>
@@ -785,34 +581,14 @@ export default function Home() {
                 </div>
               ))}
 
-              {/* Caption & Hashtags */}
               <div className="card" style={{ padding: "16px", marginTop: "8px" }}>
-                <h4
-                  style={{
-                    fontWeight: "600",
-                    marginBottom: "12px",
-                    color: "#ccc",
-                  }}
-                >
+                <h4 style={{ fontWeight: "600", marginBottom: "12px", color: "#ccc" }}>
                   📝 Caption & Hashtags
                 </h4>
-                <p
-                  style={{
-                    fontSize: "13px",
-                    color: "#aaa",
-                    lineHeight: "1.6",
-                    marginBottom: "8px",
-                  }}
-                >
+                <p style={{ fontSize: "13px", color: "#aaa", lineHeight: "1.6", marginBottom: "8px" }}>
                   {creative.caption}
                 </p>
-                <p
-                  style={{
-                    fontSize: "12px",
-                    color: "#667eea",
-                    lineHeight: "1.8",
-                  }}
-                >
+                <p style={{ fontSize: "12px", color: "#667eea", lineHeight: "1.8" }}>
                   {creative.hashtags}
                 </p>
                 <button
@@ -824,66 +600,26 @@ export default function Home() {
                 </button>
               </div>
 
-              {/* Hashtag Suggestions */}
               <div className="card" style={{ padding: "16px", marginTop: "12px" }}>
-                <h4
-                  style={{
-                    fontWeight: "600",
-                    marginBottom: "10px",
-                    color: "#ccc",
-                  }}
-                >
-                  #️⃣ Suggested Hashtags by Category
+                <h4 style={{ fontWeight: "600", marginBottom: "10px", color: "#ccc" }}>
+                  #️⃣ Suggested Hashtags
                 </h4>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
-                  {[
-                    "#Cuemath",
-                    "#MathForKids",
-                    "#EdTech",
-                    "#LearningTips",
-                    "#KidsEducation",
-                    "#ParentingTips",
-                    "#MathLearning",
-                    "#OnlineLearning",
-                    "#SmartKids",
-                    "#MathIsFun",
-                    "#SchoolLife",
-                    "#LearnWithCuemath",
-                    "#GrowthMindset",
-                    "#StudentLife",
-                    "#IndiaEdTech",
-                  ].map((tag) => (
+                  {["#Cuemath","#MathForKids","#EdTech","#LearningTips","#KidsEducation","#ParentingTips","#MathLearning","#OnlineLearning","#SmartKids","#MathIsFun","#SchoolLife","#LearnWithCuemath","#GrowthMindset","#StudentLife","#IndiaEdTech"].map((tag) => (
                     <span
                       key={tag}
-                      onClick={() => {
-                        navigator.clipboard.writeText(tag);
-                      }}
-                      style={{
-                        background: "#1a1a2e",
-                        border: "1px solid #667eea44",
-                        color: "#667eea",
-                        borderRadius: "20px",
-                        padding: "4px 10px",
-                        fontSize: "11px",
-                        cursor: "pointer",
-                        transition: "all 0.2s",
-                      }}
+                      onClick={() => navigator.clipboard.writeText(tag)}
+                      style={{ background: "#1a1a2e", border: "1px solid #667eea44", color: "#667eea", borderRadius: "20px", padding: "4px 10px", fontSize: "11px", cursor: "pointer" }}
                       title="Click to copy"
                     >
                       {tag}
                     </span>
                   ))}
                 </div>
-                <p style={{ fontSize: "11px", color: "#555", marginTop: "8px" }}>
-                  💡 Click any hashtag to copy it
-                </p>
+                <p style={{ fontSize: "11px", color: "#555", marginTop: "8px" }}>💡 Click any hashtag to copy it</p>
               </div>
 
-              <button
-                className="btn-primary"
-                style={{ width: "100%", marginTop: "16px" }}
-                onClick={generate}
-              >
+              <button className="btn-primary" style={{ width: "100%", marginTop: "16px" }} onClick={generate}>
                 🔄 Regenerate All
               </button>
             </div>
